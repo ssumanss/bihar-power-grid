@@ -7,12 +7,36 @@ import Mathlib.Tactic.Ring
 open BigOperators
 
 /-!
-# Network Synchronization and Kuramoto Manifolds in Lean 4
+# Network Synchronization and Spectral Sensitivity in Lean 4
 
-This file formalizes the mathematical concepts of synchronization in coupled 
-oscillator networks (Kuramoto models) representing high-voltage power transmission grids.
-It defines phase vectors, frequency vectors, and predicates for complete 
-phase and frequency synchronization.
+This file formalizes mathematical foundations of synchronization and spectral 
+outage sensitivity in coupled oscillator networks (Kuramoto models) representing 
+high-voltage power transmission grids (e.g., the BSPTCL 24-bus network).
+
+## Methodological Scope & Formal Verification Boundary
+- **Formally Verified in Lean 4 (Machine-Checked, 0 custom axioms):**
+  1. `two_le_of_ne`: Distinct bus indices `i ≠ j` structurally guarantee network size `2 ≤ n`,
+     formally ruling out empty or trivial single-bus systems.
+  2. `phase_sync_phase_difference_zero`: Complete phase synchrony (`θ i = θ j`) forces all
+     pairwise phase differences to vanish identically, eliminating inter-bus power transfer.
+  3. `power_damping_ratio_determines_frequency_sync`: In steady-state swing dynamics with
+     vanishing coupling, uniform power-to-damping ratios (`P i / D i = P j / D j`) determine
+     complete frequency synchronization (`ω i = ω j`), corresponding to the zero-discrepancy
+     boundary `γ_c = 0` of the Dörfler–Bullo condition.
+  4. `quadraticForm_eq_dotProduct`: Canonical bridge establishing that `quadraticForm M v`
+     coincides exactly with Mathlib's standard `dotProduct v (Matrix.mulVec M v)`.
+  5. `quadraticForm_rank_one`: The algebraic identity that for any incidence-like vector `e`,
+     the quadratic form of the rank-1 dyadic matrix `(-K * e * eᵀ)` equals `-K * (vᵀ e)²`.
+  6. `sum_mul_incidenceVector`: The inner product of any vector `v` with a line incidence
+     vector `incidenceVector i j` evaluates exactly to `v i - v j`.
+  7. `fiedler_outage_sensitivity`: The formal algebraic evaluation of the Rayleigh quotient
+     perturbation kernel for line tripping: `quadraticForm (-K e_{ij} e_{ij}ᵀ) v = -K (v i - v j)²`.
+
+- **Standard Matrix Analysis Boundary (Theorem 4 in Paper 2):**
+  The first-order perturbation approximation `Δλ₂ ≈ v₂ᵀ ΔL v₂` for a simple eigenvalue
+  under a symmetric matrix perturbation `ΔL = -K_{ij} e_{ij} e_{ij}ᵀ` is a standard classical
+  result in matrix perturbation theory (e.g., Stewart & Sun, 1990). The algebraic evaluation
+  of the resulting quadratic form is what is formally verified here without approximation.
 -/
 
 namespace DynamicalSystems
@@ -23,34 +47,76 @@ def PhaseVector (n : ℕ) := Fin n → ℝ
 /-- Represent the frequency deviation (velocity) state of the network. -/
 def FrequencyVector (n : ℕ) := Fin n → ℝ
 
-/-- A coupling matrix representing transmission line susceptances. -/
+/-- A coupling matrix representing transmission line susceptances or Laplacian perturbations. -/
 def CouplingMatrix (n : ℕ) := Matrix (Fin n) (Fin n) ℝ
 
 /-- Complete frequency synchronization (frequency locking) occurs when all frequency 
-  deviations from the grid reference frequency are identical. -/
+    deviations from the grid reference frequency are identical across all buses. -/
 def IsFrequencySynchronized {n : ℕ} (ω : FrequencyVector n) : Prop :=
   ∀ i j : Fin n, ω i = ω j
 
 /-- Complete phase synchronization (phase locking) occurs when all phase angles 
-  across the grid nodes are identical. -/
+    across the grid nodes are identical. -/
 def IsPhaseSynchronized {n : ℕ} (θ : PhaseVector n) : Prop :=
   ∀ i j : Fin n, θ i = θ j
 
-/-- Theorem proving that complete phase synchronization trivially implies 
-  complete frequency synchronization when the derivatives are uniform. -/
-theorem phase_sync_implies_freq_sync {n : ℕ} (_θ : PhaseVector n) (ω : FrequencyVector n)
-    (hDeriv : ∀ i, ω i = 0) :
+/-- For any network containing distinct buses `i ≠ j : Fin n`, the network size
+    is necessarily at least two (`2 ≤ n`). This formally excludes degenerate empty or
+    single-bus networks from line outage analysis. -/
+lemma two_le_of_ne {n : ℕ} {i j : Fin n} (h_ne : i ≠ j) : 2 ≤ n := by
+  by_contra h
+  have : i = j := by
+    ext
+    omega
+  exact h_ne this
+
+/-- When all phase angles are synchronized (`θ i = θ j` for all `i, j`),
+    the pairwise phase difference between any pair of buses vanishes identically,
+    eliminating all inter-bus sinusoidal coupling power transfer. -/
+theorem phase_sync_phase_difference_zero {n : ℕ} (θ : PhaseVector n)
+    (hPhase : IsPhaseSynchronized θ) (i j : Fin n) :
+    θ i - θ j = 0 := by
+  rw [hPhase i j, sub_self]
+
+/-- In steady-state swing dynamics with balanced coupling, frequency deviations satisfy
+    `P i - D i * ω i = 0`. Complete frequency synchronization (`ω i = ω j` for all `i, j`)
+    holds when power-to-damping ratios are uniform across all grid buses (`P i / D i = P j / D j`),
+    corresponding to the zero-discrepancy boundary `γ_c = 0` of the Dörfler-Bullo condition. -/
+theorem power_damping_ratio_determines_frequency_sync {n : ℕ}
+    (P D : Fin n → ℝ) (ω : FrequencyVector n)
+    (hD : ∀ i, D i ≠ 0)
+    (hEquil : ∀ i, P i - D i * ω i = 0)
+    (hRatio : ∀ i j, P i / D i = P j / D j) :
     IsFrequencySynchronized ω := by
   intro i j
-  rw [hDeriv i, hDeriv j]
+  have h_freq (k : Fin n) : ω k = P k / D k := by
+    have hP : P k = D k * ω k := by
+      have h := hEquil k
+      exact sub_eq_zero.mp h
+    rw [hP, mul_comm, mul_div_cancel_right₀ (ω k) (hD k)]
+  rw [h_freq i, h_freq j]
+  exact hRatio i j
 
 /-- The incidence vector for a transmission line connecting bus `i` and bus `j`. -/
 def incidenceVector {n : ℕ} (i j : Fin n) : Fin n → ℝ :=
   fun k => if k = i then 1 else if k = j then -1 else 0
 
-/-- The quadratic form of a matrix M with respect to a phase perturbation vector v. -/
-def quadraticForm {n : ℕ} (M : Matrix (Fin n) (Fin n) ℝ) (v : Fin n → ℝ) : ℝ :=
+/-- The quadratic form of a coupling matrix `M` with respect to a perturbation vector `v`. -/
+def quadraticForm {n : ℕ} (M : CouplingMatrix n) (v : Fin n → ℝ) : ℝ :=
   ∑ r : Fin n, ∑ s : Fin n, v r * M r s * v s
+
+/-- Bridge lemma: The standalone `quadraticForm` definition coincides with Mathlib's
+    canonical matrix operations `dotProduct v (Matrix.mulVec M v)`. -/
+lemma quadraticForm_eq_dotProduct {n : ℕ} (M : CouplingMatrix n) (v : Fin n → ℝ) :
+    quadraticForm M v = dotProduct v (Matrix.mulVec M v) := by
+  unfold quadraticForm dotProduct Matrix.mulVec dotProduct
+  dsimp only
+  apply Finset.sum_congr rfl
+  intro i _
+  rw [Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intro j _
+  ring
 
 /-- Theorem: For any real vector `v` and any vector `e` representing line incidence,
     the quadratic form of the rank-1 perturbation matrix `(-K * e * eᵀ)` is exactly `-K * (vᵀ e)²`. -/
