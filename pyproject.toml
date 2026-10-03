@@ -1,0 +1,24 @@
+[project]
+name = "bihar-power-grid"
+version = "1.0.0"
+description = "Replication dataset, numerical simulation suite, and formal Lean 4 verification proofs for: Synchronisation and Vulnerability Analysis of the Bihar Power Grid under Solar Integration"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Raj Kumar", email = "raju14025@gmail.com" },
+    { name = "Sandeep Suman", email = "sandeep@tmbuniv.ac.in" }
+]
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "pandas>=2.0.0",
+    "networkx>=3.0",
+    "matplotlib>=3.7.0",
+    "sympy>=1.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
