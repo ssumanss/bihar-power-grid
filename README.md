@@ -8,7 +8,7 @@
 Open-access replication codebase, formal mathematical proofs, and research datasets accompanying the manuscript:
 
 > **"Synchronisation and Vulnerability Analysis of the Bihar Power Grid under Solar Integration"**  
-> *Raj Kumar and Sandeep Suman*  
+> *Raj Kumar Raj and Sandeep Suman*  
 > University Department of Mathematics, Tilka Manjhi Bhagalpur University, Bhagalpur 812007, Bihar, India.  
 > *Chaos: An Interdisciplinary Journal of Nonlinear Science (AIP Publishing), Submitted (2026).*
 
@@ -146,8 +146,8 @@ Theorem `fiedler_outage_sensitivity` in `proofs/Synchronization.lean` verifies c
 ## Citation
 
 ```bibtex
-@article{kumar2026bihar_grid,
-  author  = {Kumar, Raj and Suman, Sandeep},
+@article{raj2026bihar_grid,
+  author  = {Raj, Raj Kumar and Suman, Sandeep},
   title   = {Synchronisation and Vulnerability Analysis of the Bihar Power Grid under Solar Integration},
   journal = {Chaos: An Interdisciplinary Journal of Nonlinear Science},
   year    = {2026},
