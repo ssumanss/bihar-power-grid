@@ -1,125 +1,72 @@
-# Synchronisation and Vulnerability Analysis of the Bihar Power Grid under Solar Integration
+# Bihar Power Grid: Transmission Topology and Vulnerability Dataset
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Formal Verification: Lean 4](https://img.shields.io/badge/Lean_4-Mathlib_v4.16.0-green.svg)](proofs/Synchronization.lean)
+[![Format: CSV](https://img.shields.io/badge/Format-CSV-blue.svg)](data/)
 
-This repository contains the complete open-access replication package, topological transmission dataset, numerical simulation suite, and formal Lean 4 verification proofs for the research paper:
+Open-access research dataset for the research paper:
 
 > **"Synchronisation and Vulnerability Analysis of the Bihar Power Grid under Solar Integration"**  
 > *Raj Kumar and Sandeep Suman*  
 > University Department of Mathematics, Tilka Manjhi Bhagalpur University, Bhagalpur 812007, Bihar, India.  
-> Submitted to: *Chaos: An Interdisciplinary Journal of Nonlinear Science* (AIP Publishing).
+> Target Journal: *Chaos: An Interdisciplinary Journal of Nonlinear Science* (AIP Publishing).
 
 ---
 
-## Repository Structure
+## Dataset Overview
+
+This repository provides the essential open datasets required for evaluating the network topology, Laplacian spectrum, solar penetration dynamics, and $N-1$ line outage vulnerabilities of the high-voltage transmission system of the Bihar State Power Transmission Company Limited (BSPTCL).
 
 ```
 bihar-power-grid/
-├── README.md                                    # Replication overview and guide
+├── README.md                                    # Dataset documentation
 ├── LICENSE                                      # MIT Open Source License
-├── pyproject.toml                               # Python project and dependency specification
 ├── .gitignore
-├── data/                                        # Processed topological and simulation datasets
-│   ├── bihar_grid_edges.csv                     # 24-node, 31-corridor reactances, distances & susceptances
-│   ├── grid_vulnerability_index.csv             # Full N-1 contingency sweep & lambda_2 degradation rankings
-│   ├── solar_penetration_sweep_results.csv      # 0% to 100% solar penetration transient frequency data
-│   └── grid_synchronization_threshold_sweep.csv # Coupling sensitivity invariance across kappa in [2.0, 6.0]
-├── figures/                                     # High-resolution vector PDF and PNG publication figures
-│   ├── bihar_grid_topology_tikz.pdf             # TikZ vector map of 24 substations and transmission lines
-│   ├── bihar_grid_sync_simulation.pdf           # 40-second Kuramoto swing equation dynamics and order parameter
-│   ├── solar_penetration_sweep.pdf              # RoCoF and frequency deviance vs solar penetration
-│   └── bihar_grid_vulnerability_centrality.pdf  # Outage vulnerability vs betweenness centrality ranking
-├── proofs/                                      # Interactive theorem prover verification files
-│   └── Synchronization.lean                     # Lean 4 / Mathlib formal proof of Rayleigh quotient outage sensitivity
-├── scripts/                                     # Standalone Python simulation and analysis suite
-│   ├── grid_laplacian.py                        # Graph Laplacian construction, GPS Haversine and Fiedler value
-│   ├── swing_equation.py                        # RK45 numerical integration of non-uniform swing equations
-│   ├── solar_penetration_sweep.py               # Inertia decommissioning parameter sweep
-│   ├── vulnerability_analysis.py                # Reactance-weighted betweenness centrality and N-1 sweep
-│   └── synchronization_threshold.py             # Analytical synchronization threshold validation
-└── tests/                                       # Automated verification and reproducibility tests
-    └── test_reproducibility.py                  # Pytest asserting exact numerical invariance
+└── data/                                        # Essential research datasets
+    ├── bihar_grid_edges.csv                     # 24-bus, 31-corridor reactances, distances & susceptances
+    ├── grid_vulnerability_index.csv             # Full N-1 contingency sweep & lambda_2 degradation rankings
+    ├── solar_penetration_sweep_results.csv      # 0% to 100% solar penetration transient frequency data
+    └── grid_synchronization_threshold_sweep.csv # Coupling sensitivity invariance across kappa in [2.0, 6.0]
 ```
 
 ---
 
-## Key Findings & Data Description
+## Data Files & Field Descriptions
 
-1. **Topological Guaranteed Synchrony:**  
-   The 24-node, 31-corridor 132/220 kV high-voltage transmission network of Bihar State Power Transmission Company Limited (BSPTCL) has an algebraic connectivity of $\lambda_2 = 0.264923 > 0$. By the Master Stability Framework, complete frequency synchronisation is structurally guaranteed.
+### 1. `data/bihar_grid_edges.csv`
+Geographic and physical corridor parameters for the 24-node, 31-line transmission network:
+- **`From`**: Origin substation / generation hub name
+- **`To`**: Destination substation / generation hub name
+- **`Distance_km`**: Geodesic distance in kilometers calculated via Haversine formula from GPS coordinates
+- **`Voltage_kV`**: Operating transmission line voltage ($132\text{ kV}$ or $220\text{ kV}$)
+- **`Conductor`**: ACSR conductor type (`Zebra` for $220\text{ kV}$, `Panther` for $132\text{ kV}$)
+- **`Reactance_Ohm`**: Line reactance $X_{ij} = X_0 L_{ij}$ with $X_0 \approx 0.32\,\Omega/\text{km}$
+- **`Coupling_K`**: Dimensionless coupling susceptance $K_{ij} = \gamma_0 / X_{ij}$ normalized with $\gamma_0 = 50.0\,\Omega$
 
-2. **Solar Penetration & Transient Volatility:**  
-   As conventional synchronous generation (NTPC Barh, Kahalgaon, Nabinagar, Barauni, Kanti) is displaced by zero-inertia utility solar PV (0% to 100% sweep), transient frequency deviations surge by **66.2%** to $0.555\text{ rad/s}$ ($\approx 0.088\text{ Hz}$), approaching the statutory $0.1\text{ Hz}$ safety margin established by the Central Electricity Authority (CEA) of India.
+### 2. `data/grid_vulnerability_index.csv`
+Comprehensive $N-1$ contingency sweep assessing structural network capacity under single transmission line outages:
+- **`Line`**: Line identifier
+- **`From_Node`**, **`To_Node`**: Endpoints of the tripped corridor
+- **`Base_Lambda2`**: Baseline algebraic connectivity ($\lambda_2 = 0.264923$)
+- **`Outage_Lambda2`**: Post-contingency algebraic connectivity $\lambda_{2,\text{outage}}$
+- **`Vulnerability_Drop`**: Fractional algebraic connectivity drop $(\lambda_{2,\text{base}} - \lambda_{2,\text{outage}}) / \lambda_{2,\text{base}}$
+- **`Islanding`**: Boolean flag (`True`/`False`) indicating topological network partitioning
 
-3. **Critical Non-Islanding Bottleneck:**  
-   An $N-1$ single-line outage sweep combined with reactance-weighted betweenness centrality identifies the **Biharsharif GSS $\longleftrightarrow$ Nawada GSS** corridor as the state's most critical non-islanding bottleneck, whose tripping causes a **65.4% collapse** in algebraic connectivity.
+### 3. `data/solar_penetration_sweep_results.csv`
+System swing dynamics metrics across six discrete solar penetration stages ($0\%$ to $100\%$):
+- **`Solar_Penetration_Pct`**: Percentage of generation from utility solar PV inverters ($0\%$, $20\%$, $40\%$, $60\%$, $80\%$, $100\%$)
+- **`Grid_Cohesion_R`**: Steady-state Kuramoto phase order parameter $R(t_{\text{end}})$
+- **`Max_Freq_Dev_rad_s`**: Peak transient frequency deviance from $50\text{ Hz}$ reference ($\text{rad/s}$)
+- **`RoCoF_rad_s2`**: Peak transient Rate of Change of Frequency ($\text{rad/s}^2$)
 
-4. **Formal Verification in Lean 4:**  
-   The first-order Rayleigh quotient perturbation formula:
-   $$\Delta\lambda_2 \approx -K_{ij} (v_{2,i} - v_{2,j})^2$$
-   is formally proven in Lean 4 (Mathlib v4.16.0) with zero axioms (`sorry`-free) in [`proofs/Synchronization.lean`](proofs/Synchronization.lean).
-
----
-
-## Quick Start & Reproduction
-
-### Prerequisites
-- Python $\ge$ 3.10
-- Recommended: [uv](https://docs.astral.sh/uv/) (fast Python package manager)
-
-### Installation
-Clone the repository:
-```bash
-git clone https://github.com/ssumanss/bihar-power-grid.git
-cd bihar-power-grid
-```
-
-Install dependencies:
-```bash
-uv pip install -e ".[dev]"
-# Or via standard pip:
-pip install -e ".[dev]"
-```
-
-### Running the Simulations
-Generate all network datasets and figures:
-```bash
-# 1. Graph Laplacian spectrum and GPS topology:
-uv run python scripts/grid_laplacian.py
-
-# 2. Non-uniform Kuramoto swing equation dynamics:
-uv run python scripts/swing_equation.py
-
-# 3. Solar penetration inertia decommissioning sweep:
-uv run python scripts/solar_penetration_sweep.py
-
-# 4. Reactance-weighted betweenness and N-1 contingency sweep:
-uv run python scripts/vulnerability_analysis.py
-```
-
-### Running Automated Reproducibility Tests
-```bash
-uv run pytest tests/ -v
-```
-
----
-
-## Formal Proofs in Lean 4
-
-To verify the mathematical proofs in Lean 4:
-```bash
-# Requires Lean 4 and Lake
-cd proofs/
-lake build
-```
+### 4. `data/grid_synchronization_threshold_sweep.csv`
+Dynamic coupling multiplier sensitivity sweep:
+- Confirms the exact invariance of the Nawada--Biharsharif bottleneck vulnerability drop ($65.44\%$) across scaling factors $\kappa \in [2.0, 6.0]$ under LAPACK re-diagonalization.
 
 ---
 
 ## Citation
 
-If you use this dataset, code, or formal verification proofs in your research, please cite:
+If using this dataset, please cite:
 
 ```bibtex
 @article{kumar2026synchronisation,
@@ -136,4 +83,4 @@ If you use this dataset, code, or formal verification proofs in your research, p
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+This dataset is distributed under the open-source **MIT License** — see [LICENSE](LICENSE) for details.
