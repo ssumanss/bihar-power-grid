@@ -8,7 +8,7 @@ Open-access research dataset for the research paper:
 > **"Synchronisation and Vulnerability Analysis of the Bihar Power Grid under Solar Integration"**  
 > *Raj Kumar and Sandeep Suman*  
 > University Department of Mathematics, Tilka Manjhi Bhagalpur University, Bhagalpur 812007, Bihar, India.  
-> Target Journal: *Chaos: An Interdisciplinary Journal of Nonlinear Science* (AIP Publishing).
+> *Manuscript submitted for publication (2026).*
 
 ---
 
@@ -66,18 +66,23 @@ Dynamic coupling multiplier sensitivity sweep:
 
 ## Citation
 
-If using this dataset, please cite:
+This repository accompanies the manuscript:
+
+> Raj Kumar and Sandeep Suman, *"Synchronisation and Vulnerability Analysis of the Bihar Power Grid under Solar Integration"*, submitted for publication (2026).
+
+If using this dataset in research prior to journal publication, please cite:
 
 ```bibtex
-@article{kumar2026synchronisation,
-  title={Synchronisation and Vulnerability Analysis of the Bihar Power Grid under Solar Integration},
-  author={Kumar, Raj and Suman, Sandeep},
-  journal={Chaos: An Interdisciplinary Journal of Nonlinear Science},
-  year={2026},
-  publisher={AIP Publishing},
-  url={https://github.com/ssumanss/bihar-power-grid}
+@misc{bihar_power_grid_2026,
+  author       = {Kumar, Raj and Suman, Sandeep},
+  title        = {Bihar Power Grid: Transmission Topology and Vulnerability Dataset},
+  year         = {2026},
+  howpublished = {\url{https://github.com/ssumanss/bihar-power-grid}},
+  note         = {Data repository accompanying manuscript submitted for publication}
 }
 ```
+
+*(Full citation with journal DOI and volume details will be updated here upon publication).*
 
 ---
 
